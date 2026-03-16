@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Endless Creative — Scale or Die</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--yellow:#f2e228;--magenta:#ff2d78;--cyan:#00d4ff;--green:#1aff8c;--orange:#ff6b1a;--purple:#b06cff;--black:#080808;--off:#f0ede6;}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--black);color:var(--off);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none;}
+
+    /* CURSOR */
+    .cur{width:12px;height:12px;background:var(--yellow);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,background .2s;mix-blend-mode:difference;}
+    .cur-r{width:40px;height:40px;border:1px solid rgba(242,226,40,.5);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .15s ease;mix-blend-mode:difference;}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.03;pointer-events:none;z-index:9000;}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:1.8rem 6vw;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(8,8,8,.95),transparent);transition:backdrop-filter .3s,background .3s;}
+    nav.scrolled{backdrop-filter:blur(20px);background:rgba(8,8,8,.85);border-bottom:1px solid rgba(242,226,40,.08);}
+    .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.05em;text-decoration:none;color:var(--off);}
+    .nav-logo span{color:var(--yellow);}
+    .nav-cta{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.4rem;border:1px solid var(--yellow);color:var(--yellow);text-decoration:none;transition:all .3s;cursor:none;}
+    .nav-cta:hover{background:var(--yellow);color:var(--black);}
+
+    /* HERO */
+    #hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:8rem 6vw 5rem;position:relative;overflow:hidden;}
+    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(242,226,40,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(242,226,40,.04) 1px,transparent 1px);background-size:80px 80px;animation:gridShift 20s linear infinite;}
+    @keyframes gridShift{0%{transform:translate(0,0)}100%{transform:translate(80px,80px)}}
+    .orb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;}
+    .o1{width:600px;height:600px;background:rgba(255,45,120,.18);top:-180px;right:-180px;animation:oFloat 8s ease-in-out infinite;}
+    .o2{width:400px;height:400px;background:rgba(0,212,255,.12);bottom:-80px;left:-80px;animation:oFloat 10s ease-in-out infinite reverse;}
+    @keyframes oFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.04)}}
+
+    .hero-eyebrow{font-family:'Space Mono',monospace;font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--yellow);margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s forwards .3s;position:relative;z-index:2;}
+    .hero-h{font-family:'Bebas Neue',sans-serif;font-size:clamp(4.5rem,13vw,13rem);line-height:.88;position:relative;z-index:2;opacity:0;animation:fadeUp 1s forwards .5s;}
+    .hero-h .l1{color:var(--off);display:block;}
+    .hero-h .l2{color:transparent;-webkit-text-stroke:2px var(--yellow);display:block;}
+    .hero-h .l3{color:var(--magenta);display:block;}
+    .glitch{position:relative;display:inline-block;}
+    .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;}
+    .glitch::before{color:var(--cyan);clip:rect(0,900px,0,0);animation:g1 4s infinite;}
+    .glitch::after{color:var(--yellow);clip:rect(0,900px,0,0);animation:g2 4s infinite;}
+    @keyframes g1{0%,90%,100%{clip:rect(0,0,0,0);transform:none}91%{clip:rect(20px,9999px,40px,0);transform:translateX(-4px)}93%{clip:rect(60px,9999px,80px,0);transform:translateX(4px)}}
+    @keyframes g2{0%,92%,100%{clip:rect(0,0,0,0);transform:none}93%{clip:rect(40px,9999px,60px,0);transform:translateX(6px)}95%{clip:rect(0,9999px,20px,0);transform:translateX(-6px)}}
+
+    .hero-sub{font-size:clamp(1rem,1.8vw,1.35rem);font-weight:300;line-height:1.6;max-width:560px;color:rgba(240,237,230,.7);margin-top:2rem;margin-bottom:2.5rem;position:relative;z-index:2;opacity:0;animation:fadeUp .9s forwards .9s;}
+    .hero-btns{display:flex;gap:1.2rem;flex-wrap:wrap;position:relative;z-index:2;opacity:0;animation:fadeUp .9s forwards 1.1s;}
+
+    /* marquee strip */
+    .mq{overflow:hidden;border-top:1px solid rgba(242,226,40,.15);border-bottom:1px solid rgba(242,226,40,.15);padding:1rem 0;background:rgba(242,226,40,.02);white-space:nowrap;margin-top:4rem;position:relative;z-index:2;}
+    .mq-inner{display:inline-flex;animation:mq 22s linear infinite;gap:2.5rem;}
+    .mq-inner span{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(240,237,230,.2);}
+    .mq-inner .dot{color:var(--yellow);}
+    @keyframes mq{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+    /* SHARED */
+    .stag{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.4em;text-transform:uppercase;color:var(--magenta);margin-bottom:2.5rem;display:flex;align-items:center;gap:1rem;}
+    .stag::after{content:'';display:block;width:50px;height:1px;background:var(--magenta);}
+    section{padding:7rem 6vw;}
+
+    /* ABOUT / WHO */
+    #about{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;padding:7rem 6vw;}
+    @media(max-width:768px){#about{grid-template-columns:1fr;gap:3rem;}}
+    .about-vis{position:relative;aspect-ratio:1;}
+    .aring{position:absolute;border-radius:50%;border:1px solid;animation:spin linear infinite;}
+    .ar1{inset:0;border-color:rgba(242,226,40,.15);animation-duration:30s;}
+    .ar2{inset:12%;border-color:rgba(255,45,120,.2);animation-duration:20s;animation-direction:reverse;}
+    .ar3{inset:24%;border-color:rgba(0,212,255,.15);animation-duration:15s;}
+    .ar4{inset:38%;border-color:rgba(26,255,140,.1);animation-duration:10s;animation-direction:reverse;}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .acenter{position:absolute;inset:40%;background:var(--yellow);display:flex;align-items:center;justify-content:center;}
+    .acenter span{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--black);line-height:1;}
+    .about-txt .big{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,4.5vw,5rem);line-height:.95;margin-bottom:1.5rem;}
+    .about-txt .big span{color:var(--cyan);}
+    .about-txt p{font-size:.95rem;color:rgba(240,237,230,.55);line-height:1.8;margin-bottom:1rem;}
+    .stats{display:flex;gap:2.5rem;margin-top:2.5rem;flex-wrap:wrap;}
+    .sn{font-family:'Bebas Neue',sans-serif;font-size:3rem;line-height:1;color:var(--yellow);}
+    .sl{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(240,237,230,.35);margin-top:.2rem;}
+
+    /* SERVICES */
+    #services{}
+    .svc-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4rem;flex-wrap:wrap;gap:1.5rem;}
+    .svc-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,7vw,7rem);line-height:.9;}
+    .svc-title span{color:var(--green);}
+    .svc-list{display:flex;flex-direction:column;}
+    .svc-item{border-top:1px solid rgba(240,237,230,.07);padding:2.2rem 0;display:grid;grid-template-columns:60px 1fr auto auto;gap:1.5rem;align-items:center;cursor:none;transition:all .3s;position:relative;overflow:hidden;}
+    .svc-item:last-child{border-bottom:1px solid rgba(240,237,230,.07);}
+    .svc-item::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(242,226,40,.03));transform:translateX(-100%);transition:transform .5s ease;}
+    .svc-item:hover::before{transform:translateX(0);}
+    .svc-item:hover .sn2{color:var(--yellow);}
+    .svc-item:hover .arr{transform:translateX(6px);color:var(--yellow);}
+    .sn2{font-family:'Space Mono',monospace;font-size:.65rem;color:rgba(240,237,230,.2);transition:color .3s;letter-spacing:.2em;}
+    .svc-item h3{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.6rem,2.5vw,2.8rem);letter-spacing:.02em;margin-bottom:.3rem;}
+    .svc-item p{font-size:.85rem;color:rgba(240,237,230,.4);max-width:460px;line-height:1.6;}
+    .sticker{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid;white-space:nowrap;}
+    .sy{border-color:var(--yellow);color:var(--yellow);}
+    .sm{border-color:var(--magenta);color:var(--magenta);}
+    .sc{border-color:var(--cyan);color:var(--cyan);}
+    .sg{border-color:var(--green);color:var(--green);}
+    .so{border-color:var(--orange);color:var(--orange);}
+    .sp{border-color:var(--purple);color:var(--purple);}
+    .arr{font-size:1.3rem;color:rgba(240,237,230,.2);transition:all .3s;}
+    @media(max-width:700px){.svc-item{grid-template-columns:36px 1fr;}.arr,.sticker{display:none;}}
+
+    /* RESULTS */
+    #results{background:rgba(255,107,26,.03);}
+    .res-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4rem;flex-wrap:wrap;gap:1.5rem;}
+    .res-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,6vw,7rem);line-height:.9;}
+    .res-big em{font-style:normal;color:var(--orange);}
+    .res-sub{max-width:320px;font-size:.9rem;color:rgba(240,237,230,.45);line-height:1.7;}
+    .res-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2px;background:rgba(255,107,26,.12);}
+    .rc{background:var(--black);padding:3rem 2.5rem;}
+    .rc .rv{font-family:'Bebas Neue',sans-serif;font-size:4rem;line-height:1;color:var(--orange);display:block;}
+    .rc .rl{font-size:.85rem;color:rgba(240,237,230,.5);line-height:1.5;margin-top:.4rem;}
+    .rc .rt{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,107,26,.45);margin-top:.8rem;}
+
+    /* CASE STUDIES */
+    #case-studies{}
+    .cs-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4rem;flex-wrap:wrap;gap:1.5rem;}
+    .cs-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,6vw,7rem);line-height:.9;}
+    .cs-title span{color:var(--cyan);}
+    .cs-sub{max-width:300px;font-size:.9rem;color:rgba(240,237,230,.4);line-height:1.7;}
+    .cs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(0,212,255,.07);}
+    @media(max-width:860px){.cs-grid{grid-template-columns:1fr;}}
+    .csc{background:var(--black);position:relative;overflow:hidden;cursor:none;}
+    .csc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cyan);transform:scaleX(0);transform-origin:left;transition:transform .4s ease;}
+    .csc:hover::before,.csc.open::before{transform:scaleX(1);}
+    .csc-face{padding:2.5rem 2rem;transition:background .3s;}
+    .csc:hover .csc-face{background:rgba(0,212,255,.03);}
+    .csc-num{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.3em;color:rgba(240,237,230,.18);margin-bottom:1.5rem;display:block;}
+    .csc-ind{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.3rem .7rem;border:1px solid var(--cyan);color:var(--cyan);display:inline-block;margin-bottom:1.2rem;}
+    .csc-name{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:.95;margin-bottom:.6rem;color:var(--off);}
+    .csc-tag{font-size:.85rem;color:rgba(240,237,230,.4);line-height:1.5;margin-bottom:1.5rem;}
+    .csc-metrics{display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+    .cm .mv{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;display:block;}
+    .cm .ml{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,237,230,.3);}
+    .cs-btn{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(240,237,230,.35);background:none;border:none;cursor:none;padding:0;display:flex;align-items:center;gap:.5rem;transition:color .3s;}
+    .cs-btn:hover{color:var(--cyan);}
+    .cs-icon{width:22px;height:22px;border:1px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;line-height:1;transition:transform .4s ease,background .3s;flex-shrink:0;}
+    .csc.open .cs-icon{transform:rotate(45deg);background:var(--cyan);border-color:var(--cyan);color:var(--black);}
+    .csc.open .cs-btn{color:var(--cyan);}
+    .cs-drawer{max-height:0;overflow:hidden;transition:max-height .55s cubic-bezier(.4,0,.2,1);}
+    .csc.open .cs-drawer{max-height:700px;}
+    .cs-din{padding:2rem 2rem 2.5rem;border-top:1px solid rgba(0,212,255,.12);}
+    .cs-sec{margin-bottom:1.5rem;}
+    .cs-sec h4{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin-bottom:.6rem;}
+    .cs-sec p{font-size:.85rem;color:rgba(240,237,230,.55);line-height:1.75;}
+    .cs-sec ul{list-style:none;padding:0;}
+    .cs-sec ul li{font-size:.85rem;color:rgba(240,237,230,.55);line-height:1.75;padding-left:1.2rem;position:relative;}
+    .cs-sec ul li::before{content:'→';position:absolute;left:0;color:var(--cyan);font-size:.7rem;}
+    .cs-link{display:inline-flex;align-items:center;gap:.5rem;font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--yellow);text-decoration:none;border-bottom:1px solid rgba(242,226,40,.3);padding-bottom:.2rem;transition:all .3s;margin-top:.3rem;}
+    .cs-link:hover{color:var(--off);border-color:var(--off);gap:.9rem;}
+
+    /* FIT */
+    #fit{background:linear-gradient(180deg,transparent,rgba(26,255,140,.02),transparent);}
+    .fit-h{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,5vw,6rem);line-height:.95;margin-bottom:3.5rem;}
+    .fit-h em{font-style:normal;color:var(--magenta);}
+    .fit-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;}
+    @media(max-width:700px){.fit-grid{grid-template-columns:1fr;}}
+    .fc h3{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;margin-bottom:1.5rem;}
+    .fc.yes h3{color:var(--green);} .fc.no h3{color:rgba(240,237,230,.25);}
+    .fi{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:1.2rem;}
+    .fi-ic{font-size:.9rem;margin-top:.1rem;flex-shrink:0;}
+    .fc.yes .fi-ic{color:var(--green);} .fc.no .fi-ic{color:rgba(240,237,230,.15);}
+    .fi p{font-size:.9rem;color:rgba(240,237,230,.55);line-height:1.6;}
+    .fc.no .fi p{color:rgba(240,237,230,.2);text-decoration:line-through;text-decoration-color:rgba(240,237,230,.08);}
+
+    /* CTA */
+    #cta{padding:10rem 6vw;text-align:center;position:relative;overflow:hidden;}
+    .cta-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(255,45,120,.14) 0%,rgba(242,226,40,.05) 40%,transparent 70%);}
+    .cta-h{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,9vw,11rem);line-height:.9;position:relative;z-index:2;}
+    .cta-h .la{color:var(--off);display:block;}
+    .cta-h .lb{color:transparent;-webkit-text-stroke:2px var(--yellow);display:block;}
+    .cta-h .lc{color:var(--magenta);display:block;}
+    .cta-p{font-size:1rem;color:rgba(240,237,230,.5);max-width:440px;margin:2rem auto 3.5rem;line-height:1.7;position:relative;z-index:2;}
+    .cta-btns{display:flex;justify-content:center;gap:1.2rem;flex-wrap:wrap;position:relative;z-index:2;}
+    .cta-note{margin-top:1.5rem;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(240,237,230,.18);position:relative;z-index:2;}
+
+    /* BUTTONS */
+    .btn{font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:1.1rem 2.2rem;background:var(--yellow);color:var(--black);border:none;cursor:none;text-decoration:none;display:inline-block;font-weight:700;position:relative;overflow:hidden;transition:transform .2s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));}
+    .btn::before{content:'';position:absolute;inset:0;background:var(--magenta);transform:translateX(-100%);transition:transform .3s ease;}
+    .btn:hover{transform:translateY(-3px);} .btn:hover::before{transform:translateX(0);}
+    .btn span{position:relative;z-index:1;}
+    .btn-xl{font-family:'Space Mono',monospace;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;padding:1.3rem 3rem;background:var(--yellow);color:var(--black);border:none;cursor:none;text-decoration:none;display:inline-block;font-weight:700;position:relative;overflow:hidden;transition:transform .2s;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));}
+    .btn-xl::before{content:'';position:absolute;inset:0;background:var(--magenta);transform:translateX(-100%);transition:transform .35s ease;}
+    .btn-xl:hover{transform:translateY(-4px);} .btn-xl:hover::before{transform:translateX(0);}
+    .btn-xl span{position:relative;z-index:1;}
+    .btn-ghost{font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:1.1rem 2.2rem;background:transparent;color:var(--off);border:1px solid rgba(240,237,230,.25);cursor:none;text-decoration:none;display:inline-block;transition:all .3s;}
+    .btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);}
+
+    /* FOOTER */
+    footer{border-top:1px solid rgba(240,237,230,.05);padding:2.5rem 6vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+    .fl{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.05em;}
+    .fl span{color:var(--yellow);}
+    .fc2{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:rgba(240,237,230,.2);text-transform:uppercase;}
+    .flinks{display:flex;gap:1.5rem;}
+    .flinks a{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(240,237,230,.3);text-decoration:none;transition:color .3s;}
+    .flinks a:hover{color:var(--yellow);}
+
+    /* ANIM */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+    .rev{opacity:0;transform:translateY(35px);transition:opacity .75s ease,transform .75s ease;}
+    .rev.on{opacity:1;transform:translateY(0);}
+  </style>
+</head>
+<body>
+
+<div class="cur" id="cur"></div>
+<div class="cur-r" id="curR"></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">The Endless <span>Creative</span></a>
+  <a href="#cta" class="nav-cta" id="nav-cta-link">Let's Scale</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="hero-eyebrow" id="hero-eyebrow">— For businesses doing $500K+ who refuse to plateau</div>
+  <h1 class="hero-h">
+    <span class="l1" id="hero-l1">Your brand</span>
+    <span class="l2" id="hero-l2">should be</span>
+    <span class="l3"><span class="glitch" data-text="Unstoppable." id="hero-l3">Unstoppable.</span></span>
+  </h1>
+  <p class="hero-sub" id="hero-sub">The Endless Creative is an à la carte marketing, advertising & web development agency built for ambitious businesses ready to break through the ceiling.</p>
+  <div class="hero-btns">
+    <a href="#cta" class="btn-xl"><span id="hero-btn1">Start Scaling Now</span></a>
+    <a href="#services" class="btn-ghost" id="hero-btn2">See What We Do</a>
+  </div>
+  <div class="mq">
+    <div class="mq-inner">
+      <span>Web Development</span><span class="dot">✦</span><span>Brand Strategy</span><span class="dot">✦</span><span>Paid Media</span><span class="dot">✦</span><span>SEO</span><span class="dot">✦</span><span>Social Media</span><span class="dot">✦</span><span>Email Marketing</span><span class="dot">✦</span><span>Sales Funnels</span><span class="dot">✦</span><span>Content Production</span><span class="dot">✦</span>
+      <span>Web Development</span><span class="dot">✦</span><span>Brand Strategy</span><span class="dot">✦</span><span>Paid Media</span><span class="dot">✦</span><span>SEO</span><span class="dot">✦</span><span>Social Media</span><span class="dot">✦</span><span>Email Marketing</span><span class="dot">✦</span><span>Sales Funnels</span><span class="dot">✦</span><span>Content Production</span><span class="dot">✦</span>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-vis rev">
+    <div class="aring ar1"></div><div class="aring ar2"></div><div class="aring ar3"></div><div class="aring ar4"></div>
+    <div class="acenter"><span>TEC</span></div>
+  </div>
+  <div class="about-txt rev">
+    <div class="stag">Who We Are</div>
+    <h2 class="big" id="about-h">We're not an agency.<br><span>We're your growth team.</span></h2>
+    <p id="about-p1">The Endless Creative was built on one conviction: businesses that have already proven themselves deserve partners who move at their speed.</p>
+    <p id="about-p2">Based in Knoxville. Working everywhere. No fluff, no filler — just the exact services you need, executed with precision.</p>
+    <div class="stats">
+      <div><div class="sn" id="stat1-n">100%</div><div class="sl" id="stat1-l">À La Carte</div></div>
+      <div><div class="sn" id="stat2-n">$500K+</div><div class="sl" id="stat2-l">Client Min.</div></div>
+      <div><div class="sn" id="stat3-n">2X</div><div class="sl" id="stat3-l">Avg. ROI Focus</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="svc-hdr">
+    <h2 class="svc-title rev">What We<br><span>Actually</span> Do</h2>
+    <p style="max-width:300px;font-size:.9rem;color:rgba(240,237,230,.4);line-height:1.7" class="rev" id="svc-desc">Pick what you need. Skip what you don't. Every service built to generate measurable return.</p>
+  </div>
+  <div class="svc-list">
+    <div class="svc-item rev"><span class="sn2">01</span><div><h3 id="svc1-h">Web Development & Design</h3><p id="svc1-p">High-converting websites and web apps built for speed, SEO, and sales. No templates. No compromises.</p></div><span class="sticker sy">Dev + Design</span><span class="arr">→</span></div>
+    <div class="svc-item rev"><span class="sn2">02</span><div><h3 id="svc2-h">Paid Advertising</h3><p id="svc2-p">Google, Meta, TikTok, YouTube — wherever your customers live, we'll put you in front of them with precision.</p></div><span class="sticker sm">Paid Media</span><span class="arr">→</span></div>
+    <div class="svc-item rev"><span class="sn2">03</span><div><h3 id="svc3-h">SEO & Content Strategy</h3><p id="svc3-p">From technical SEO to full content ecosystems, we build organic traffic that compounds over time.</p></div><span class="sticker sc">Organic</span><span class="arr">→</span></div>
+    <div class="svc-item rev"><span class="sn2">04</span><div><h3 id="svc4-h">Brand Identity & Strategy</h3><p id="svc4-p">We build identities that command premium prices, earn trust fast, and make your brand unforgettable.</p></div><span class="sticker sg">Branding</span><span class="arr">→</span></div>
+    <div class="svc-item rev"><span class="sn2">05</span><div><h3 id="svc5-h">Social Media Management</h3><p id="svc5-p">Strategy-first social that grows audiences and converts followers into loyal paying customers.</p></div><span class="sticker so">Social</span><span class="arr">→</span></div>
+    <div class="svc-item rev"><span class="sn2">06</span><div><h3 id="svc6-h">Email & Automation</h3><p id="svc6-p">Flows and campaigns that nurture leads and maximize lifetime customer value — on autopilot.</p></div><span class="sticker sp">Retention</span><span class="arr">→</span></div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="res-top">
+    <h2 class="res-big rev" id="results-h">Built For<br><em>Results.</em><br>Full Stop.</h2>
+    <p class="res-sub rev" id="results-sub">Every decision anchored to one thing: your bottom line.</p>
+  </div>
+  <div class="res-cards">
+    <div class="rc rev"><span class="rv" id="r1-v">3.8X</span><div class="rl" id="r1-l">Avg. return on ad spend — e-commerce clients, first 90 days</div><div class="rt" id="r1-t">Paid Media</div></div>
+    <div class="rc rev"><span class="rv" id="r2-v">+247%</span><div class="rl" id="r2-l">Organic traffic increase from SEO campaigns within 6 months</div><div class="rt" id="r2-t">SEO & Content</div></div>
+    <div class="rc rev"><span class="rv" id="r3-v">+60%</span><div class="rl" id="r3-l">Average conversion rate lift after website redesign projects</div><div class="rt" id="r3-t">Web Dev</div></div>
+    <div class="rc rev"><span class="rv" id="r4-v">2.1X</span><div class="rl" id="r4-l">Revenue growth averaged across scaling clients in year one</div><div class="rt" id="r4-t">Full Stack</div></div>
+  </div>
+</section>
+
+<!-- CASE STUDIES -->
+<section id="case-studies">
+  <div class="cs-hdr">
+    <h2 class="cs-title rev">Real Work.<br><span>Real Results.</span></h2>
+    <p class="cs-sub rev" id="cs-sub">A few brands we've helped break through. Click to see the full story.</p>
+  </div>
+  <div class="cs-grid">
+
+    <div class="csc rev" id="csc-1">
+      <div class="csc-face">
+        <span class="csc-num">Case Study — 01</span>
+        <span class="csc-ind" id="cs1-ind">Automotive</span>
+        <h3 class="csc-name" id="cs1-name">Knoxville<br>Collision Center</h3>
+        <p class="csc-tag" id="cs1-tag">Full-service auto body shop dominating local search and modernizing their brand.</p>
+        <div class="csc-metrics">
+          <div class="cm"><span class="mv" style="color:var(--magenta)" id="cs1-m1v">+183%</span><span class="ml" id="cs1-m1l">Organic Leads</span></div>
+          <div class="cm"><span class="mv" style="color:var(--yellow)" id="cs1-m2v">4.9★</span><span class="ml" id="cs1-m2l">Google Rating</span></div>
+        </div>
+        <button class="cs-btn" onclick="toggleCS('csc-1')"><span class="cs-icon">+</span><span>View Case Study</span></button>
+      </div>
+      <div class="cs-drawer">
+        <div class="cs-din">
+          <div class="cs-sec"><h4>The Challenge</h4><p id="cs1-challenge">An established auto body shop with near-zero online visibility. Their website was outdated, unoptimized, and failing to convert local search traffic into booked estimates.</p></div>
+          <div class="cs-sec"><h4>What We Did</h4><ul id="cs1-did"><li>Full website redesign with service-specific landing pages</li><li>Local SEO — GMB optimization, citation cleanup, review strategy</li><li>Google Ads targeting high-intent collision repair searches</li><li>Reputation management driving consistent 5-star reviews</li></ul></div>
+          <div class="cs-sec"><h4>The Outcome</h4><p id="cs1-outcome">Within 5 months, organic leads increased 183%. The shop hit its highest monthly revenue on record in month four of the engagement.</p></div>
+          <a href="https://www.chapmancollision.com" target="_blank" rel="noopener" class="cs-link" id="cs1-link">Visit chapmancollision.com →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="csc rev" id="csc-2">
+      <div class="csc-face">
+        <span class="csc-num">Case Study — 02</span>
+        <span class="csc-ind" id="cs2-ind">Photography</span>
+        <h3 class="csc-name" id="cs2-name">Whitney Brooke<br>Photography</h3>
+        <p class="csc-tag" id="cs2-tag">Portrait photographer scaling bookings and establishing a premium brand position.</p>
+        <div class="csc-metrics">
+          <div class="cm"><span class="mv" style="color:var(--green)" id="cs2-m1v">2.4X</span><span class="ml" id="cs2-m1l">Booking Rate</span></div>
+          <div class="cm"><span class="mv" style="color:var(--yellow)" id="cs2-m2v">+91%</span><span class="ml" id="cs2-m2l">Site Traffic</span></div>
+        </div>
+        <button class="cs-btn" onclick="toggleCS('csc-2')"><span class="cs-icon">+</span><span>View Case Study</span></button>
+      </div>
+      <div class="cs-drawer">
+        <div class="cs-din">
+          <div class="cs-sec"><h4>The Challenge</h4><p id="cs2-challenge">A talented photographer with an inconsistent brand and a website that undersold her work. Booked on referrals alone and hitting a ceiling.</p></div>
+          <div class="cs-sec"><h4>What We Did</h4><ul id="cs2-did"><li>Brand identity refresh — typography, palette, voice</li><li>Portfolio-first website redesign with streamlined inquiry flow</li><li>Instagram content strategy and caption framework</li><li>Pinterest SEO for wedding and portrait search traffic</li></ul></div>
+          <div class="cs-sec"><h4>The Outcome</h4><p id="cs2-outcome">Site traffic nearly doubled in 90 days. Inquiries converted at 2.4X the prior rate. Package pricing raised 30% within six months.</p></div>
+          <a href="https://www.whitneybrookephoto.com" target="_blank" rel="noopener" class="cs-link" id="cs2-link">Visit whitneybrookephoto.com →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="csc rev" id="csc-3">
+      <div class="csc-face">
+        <span class="csc-num">Case Study — 03</span>
+        <span class="csc-ind" id="cs3-ind">Music & Entertainment</span>
+        <h3 class="csc-name" id="cs3-name">Ciderville<br>Music</h3>
+        <p class="csc-tag" id="cs3-tag">Independent music label growing audience, merch revenue, and artist visibility.</p>
+        <div class="csc-metrics">
+          <div class="cm"><span class="mv" style="color:var(--purple)" id="cs3-m1v">+310%</span><span class="ml" id="cs3-m1l">Email List</span></div>
+          <div class="cm"><span class="mv" style="color:var(--yellow)" id="cs3-m2v">3.1X</span><span class="ml" id="cs3-m2l">Merch Revenue</span></div>
+        </div>
+        <button class="cs-btn" onclick="toggleCS('csc-3')"><span class="cs-icon">+</span><span>View Case Study</span></button>
+      </div>
+      <div class="cs-drawer">
+        <div class="cs-din">
+          <div class="cs-sec"><h4>The Challenge</h4><p id="cs3-challenge">A beloved music brand with passionate fans but a fragmented digital presence — no email strategy, outdated merch store, and disconnected social channels.</p></div>
+          <div class="cs-sec"><h4>What We Did</h4><ul id="cs3-did"><li>Website overhaul with integrated merch store and artist hub</li><li>Email capture + welcome/nurture automation sequence</li><li>Facebook & Instagram ads targeting fans by genre</li><li>Content calendar unifying releases, tours, and merch drops</li></ul></div>
+          <div class="cs-sec"><h4>The Outcome</h4><p id="cs3-outcome">Email list grew 310% in four months. Merch revenue tripled during the next release cycle. The brand now has a repeatable launch playbook for every new signing.</p></div>
+          <a href="https://www.cidervillemusic.com" target="_blank" rel="noopener" class="cs-link" id="cs3-link">Visit cidervillemusic.com →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FIT -->
+<section id="fit">
+  <h2 class="fit-h rev" id="fit-h">You're our person.<br>Or you're <em>not.</em></h2>
+  <div class="fit-grid">
+    <div class="fc yes rev">
+      <h3 id="fit-yes-h">✦ Built for you if...</h3>
+      <div class="fi"><span class="fi-ic">✓</span><p id="fit-y1">You're doing $500K+ in revenue and want to push past the next ceiling</p></div>
+      <div class="fi"><span class="fi-ic">✓</span><p id="fit-y2">You're tired of agency overhead that doesn't generate ROI</p></div>
+      <div class="fi"><span class="fi-ic">✓</span><p id="fit-y3">You want a partner who treats your budget like their own</p></div>
+      <div class="fi"><span class="fi-ic">✓</span><p id="fit-y4">You move fast and expect the same from your team</p></div>
+      <div class="fi"><span class="fi-ic">✓</span><p id="fit-y5">You want direct access to your strategists, not a middleman</p></div>
+    </div>
+    <div class="fc no rev">
+      <h3 id="fit-no-h">✕ Not the right fit if...</h3>
+      <div class="fi"><span class="fi-ic">✕</span><p id="fit-n1">You're a startup still figuring out the business model</p></div>
+      <div class="fi"><span class="fi-ic">✕</span><p id="fit-n2">You want to "test the waters" with a $300/month retainer</p></div>
+      <div class="fi"><span class="fi-ic">✕</span><p id="fit-n3">You just need someone to "post on Instagram" with no strategy</p></div>
+      <div class="fi"><span class="fi-ic">✕</span><p id="fit-n4">You're not willing to move quickly on approvals</p></div>
+      <div class="fi"><span class="fi-ic">✕</span><p id="fit-n5">You don't value data, reporting, or honest performance talks</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-bg"></div>
+  <h2 class="cta-h">
+    <span class="la" id="cta-l1">Ready to</span>
+    <span class="lb" id="cta-l2">Stop Guessing</span>
+    <span class="lc" id="cta-l3">& Start Scaling?</span>
+  </h2>
+  <p class="cta-p" id="cta-p">Tell us where you're at and where you want to go. We'll map exactly what it takes to get there.</p>
+  <div class="cta-btns">
+    <a href="mailto:taylor@theendlesscreative.com?subject=Let's%20Scale%20My%20Business" class="btn-xl"><span id="cta-btn">Get a Free Strategy Call</span></a>
+  </div>
+  <p class="cta-note" id="cta-note">No pitch decks. No hard sells. Just a real conversation about your growth.</p>
+</section>
+
+<footer>
+  <div class="fl">The Endless <span>Creative</span></div>
+  <div class="flinks">
+    <a href="#services">Services</a>
+    <a href="#about">About</a>
+    <a href="mailto:taylor@theendlesscreative.com">Contact</a>
+  </div>
+  <div class="fc2" id="footer-copy">© 2025 The Endless Creative — Knoxville, TN</div>
+</footer>
+
+<script>
+// ── CONTENT MAP ──────────────────────────────────────────────
+const CONTENT_KEY = 'tec_content';
+const defaults = {};
+
+// Collect all editable elements on load
+function getAllIds() {
+  return [...document.querySelectorAll('[id]')]
+    .filter(el => el.id && !['cur','curR','nav','csc-1','csc-2','csc-3'].includes(el.id))
+    .map(el => el.id);
+}
+
+function loadContent() {
+  const saved = JSON.parse(localStorage.getItem(CONTENT_KEY) || '{}');
+  getAllIds().forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (saved[id] !== undefined) {
+      el.innerHTML = saved[id];
+      // update glitch data-text too
+      if (el.closest('.glitch')) el.closest('.glitch').setAttribute('data-text', saved[id]);
+    }
+  });
+}
+
+loadContent();
+
+// ── CURSOR ──────────────────────────────────────────────────
+const cur = document.getElementById('cur');
+const curR = document.getElementById('curR');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function tick(){
+  cur.style.left=mx+'px';cur.style.top=my+'px';
+  rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
+  curR.style.left=rx+'px';curR.style.top=ry+'px';
+  requestAnimationFrame(tick);
+})();
+document.querySelectorAll('a,button,.svc-item,.csc').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.transform='translate(-50%,-50%) scale(2.5)';curR.style.transform='translate(-50%,-50%) scale(1.5)';curR.style.borderColor='rgba(242,226,40,.8)';});
+  el.addEventListener('mouseleave',()=>{cur.style.transform='translate(-50%,-50%) scale(1)';curR.style.transform='translate(-50%,-50%) scale(1)';curR.style.borderColor='rgba(242,226,40,.5)';});
+});
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting){e.target.style.transitionDelay=(i%3)*.1+'s';e.target.classList.add('on');}});
+},{threshold:.1});
+document.querySelectorAll('.rev').forEach(el=>obs.observe(el));
+
+// ── NAV ───────────────────────────────────────────────────────
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>60));
+
+// ── CASE STUDY TOGGLE ─────────────────────────────────────────
+function toggleCS(id){
+  const c=document.getElementById(id),was=c.classList.contains('open');
+  document.querySelectorAll('.csc.open').forEach(x=>x.classList.remove('open'));
+  if(!was)c.classList.add('open');
+}
+</script>
+</body>
+</html>

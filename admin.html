@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TEC Admin — Content Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--yellow:#f2e228;--magenta:#ff2d78;--cyan:#00d4ff;--green:#1aff8c;--black:#080808;--dark:#0f0f0f;--panel:#141414;--border:rgba(255,255,255,.07);--off:#f0ede6;}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--black);color:var(--off);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+    /* ── LOGIN ── */
+    #login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:2rem;}
+    .login-logo{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:.05em;color:var(--off);}
+    .login-logo span{color:var(--yellow);}
+    .login-tag{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.35em;text-transform:uppercase;color:rgba(240,237,230,.3);}
+    .login-box{width:100%;max-width:380px;border:1px solid var(--border);padding:2.5rem;background:var(--panel);}
+    .login-box h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;margin-bottom:.5rem;}
+    .login-box p{font-size:.85rem;color:rgba(240,237,230,.4);margin-bottom:2rem;}
+    .field{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem;}
+    .field label{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(240,237,230,.4);}
+    .field input{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--off);font-family:'DM Sans',sans-serif;font-size:.95rem;padding:.75rem 1rem;outline:none;transition:border .2s;}
+    .field input:focus{border-color:var(--yellow);}
+    .login-err{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.1em;color:var(--magenta);margin-bottom:1rem;display:none;}
+    .login-err.show{display:block;}
+    .btn-login{width:100%;font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:1rem;background:var(--yellow);color:var(--black);border:none;cursor:pointer;font-weight:700;transition:background .2s;}
+    .btn-login:hover{background:#d4c520;}
+
+    /* ── ADMIN SHELL ── */
+    #admin{display:none;min-height:100vh;}
+    #admin.show{display:flex;}
+
+    /* SIDEBAR */
+    .sidebar{width:260px;min-height:100vh;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+    .sb-logo{padding:1.8rem 1.5rem;border-bottom:1px solid var(--border);}
+    .sb-logo .tec{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.05em;}
+    .sb-logo .tec span{color:var(--yellow);}
+    .sb-logo .admin-tag{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(240,237,230,.25);margin-top:.3rem;}
+    .sb-nav{flex:1;padding:1rem 0;}
+    .sb-section{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(240,237,230,.25);padding:.5rem 1.5rem;margin-top:.5rem;}
+    .sb-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.5rem;cursor:pointer;transition:background .2s;border-left:2px solid transparent;font-size:.88rem;color:rgba(240,237,230,.5);}
+    .sb-item:hover{background:rgba(255,255,255,.04);color:var(--off);}
+    .sb-item.active{background:rgba(242,226,40,.06);border-left-color:var(--yellow);color:var(--yellow);}
+    .sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+    .sb-footer{padding:1.2rem 1.5rem;border-top:1px solid var(--border);}
+    .sb-footer button{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;background:none;border:1px solid rgba(240,237,230,.15);color:rgba(240,237,230,.4);padding:.5rem 1rem;cursor:pointer;width:100%;transition:all .2s;}
+    .sb-footer button:hover{border-color:var(--magenta);color:var(--magenta);}
+
+    /* MAIN */
+    .main{flex:1;padding:2.5rem;overflow-y:auto;}
+    .main-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2.5rem;flex-wrap:wrap;gap:1rem;}
+    .main-header h1{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;}
+    .main-header h1 span{color:var(--yellow);}
+    .header-actions{display:flex;gap:.8rem;flex-wrap:wrap;}
+    .btn-save{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.5rem;background:var(--yellow);color:var(--black);border:none;cursor:pointer;font-weight:700;transition:all .2s;}
+    .btn-save:hover{background:#d4c520;}
+    .btn-reset{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.5rem;background:transparent;color:rgba(240,237,230,.4);border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+    .btn-reset:hover{border-color:var(--magenta);color:var(--magenta);}
+    .btn-preview{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 1.5rem;background:transparent;color:var(--cyan);border:1px solid var(--cyan);cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
+    .btn-preview:hover{background:var(--cyan);color:var(--black);}
+
+    /* PANELS */
+    .panel{display:none;}
+    .panel.active{display:block;}
+
+    /* CARDS */
+    .edit-card{background:var(--panel);border:1px solid var(--border);padding:2rem;margin-bottom:1.5rem;position:relative;}
+    .edit-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:0;background:var(--yellow);transition:height .3s;}
+    .edit-card:focus-within::before{height:100%;}
+    .card-label{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(240,237,230,.3);margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem;}
+    .card-label::after{content:'';flex:1;height:1px;background:var(--border);}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+    @media(max-width:700px){.field-row{grid-template-columns:1fr;}}
+    .field-full{margin-bottom:1rem;}
+    .f-label{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(240,237,230,.3);margin-bottom:.4rem;display:block;}
+    .f-input{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--off);font-family:'DM Sans',sans-serif;font-size:.9rem;padding:.65rem .9rem;outline:none;transition:border .2s;resize:vertical;}
+    .f-input:focus{border-color:var(--yellow);}
+    textarea.f-input{min-height:80px;line-height:1.6;}
+
+    /* CASE STUDY cards */
+    .cs-edit-card{background:var(--panel);border:1px solid var(--border);margin-bottom:2rem;}
+    .cs-edit-head{padding:1.2rem 1.5rem;background:rgba(0,212,255,.04);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+    .cs-edit-head h3{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--cyan);}
+    .cs-edit-tog{font-family:'Space Mono',monospace;font-size:.65rem;color:rgba(240,237,230,.3);transition:color .2s;}
+    .cs-edit-head:hover .cs-edit-tog{color:var(--cyan);}
+    .cs-edit-body{padding:1.5rem;display:none;}
+    .cs-edit-body.show{display:block;}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:2rem;right:2rem;background:var(--green);color:var(--black);font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;padding:.8rem 1.5rem;transform:translateY(80px);opacity:0;transition:all .3s;z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+
+    /* STAT color preview */
+    .color-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:.4rem;vertical-align:middle;}
+
+    /* Dashboard welcome */
+    .welcome-box{background:linear-gradient(135deg,rgba(242,226,40,.06),rgba(255,45,120,.04));border:1px solid var(--border);padding:2rem;margin-bottom:2rem;}
+    .welcome-box h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;margin-bottom:.5rem;}
+    .welcome-box h2 span{color:var(--yellow);}
+    .welcome-box p{font-size:.9rem;color:rgba(240,237,230,.5);line-height:1.7;}
+    .quick-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);margin-bottom:2rem;}
+    .qs{background:var(--panel);padding:1.5rem;}
+    .qs-n{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;color:var(--yellow);}
+    .qs-l{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(240,237,230,.3);margin-top:.3rem;}
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-logo">The Endless <span>Creative</span></div>
+  <div class="login-tag">Admin Portal</div>
+  <div class="login-box">
+    <h2>Sign In</h2>
+    <p>Content management for the TEC funnel page.</p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="l-user" placeholder="Enter username" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="l-pass" placeholder="Enter password" autocomplete="current-password"/>
+    </div>
+    <div class="login-err" id="login-err">Incorrect credentials. Try again.</div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+  </div>
+</div>
+
+<!-- ── ADMIN SHELL ─────────────────────────────── -->
+<div id="admin">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="tec">The Endless <span>Creative</span></div>
+      <div class="admin-tag">Admin Panel</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Pages</div>
+      <div class="sb-item active" onclick="showPanel('dashboard',this)"><span class="sb-dot"></span>Dashboard</div>
+      <div class="sb-section">Content</div>
+      <div class="sb-item" onclick="showPanel('hero',this)"><span class="sb-dot"></span>Hero</div>
+      <div class="sb-item" onclick="showPanel('about',this)"><span class="sb-dot"></span>About & Stats</div>
+      <div class="sb-item" onclick="showPanel('services',this)"><span class="sb-dot"></span>Services</div>
+      <div class="sb-item" onclick="showPanel('results',this)"><span class="sb-dot"></span>Results</div>
+      <div class="sb-item" onclick="showPanel('casestudies',this)"><span class="sb-dot"></span>Case Studies</div>
+      <div class="sb-item" onclick="showPanel('fit',this)"><span class="sb-dot"></span>Who It's For</div>
+      <div class="sb-item" onclick="showPanel('ctasec',this)"><span class="sb-dot"></span>CTA & Footer</div>
+    </nav>
+    <div class="sb-footer">
+      <button onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="main-header">
+      <h1>Content <span>Editor</span></h1>
+      <div class="header-actions">
+        <a href="endless-creative-funnel.html" target="_blank" class="btn-preview">Preview Site ↗</a>
+        <button class="btn-reset" onclick="resetAll()">Reset All</button>
+        <button class="btn-save" onclick="saveAll()">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="welcome-box">
+        <h2>Welcome back, <span>Taylor.</span></h2>
+        <p>Edit any section of the TEC funnel page using the sidebar. All changes are saved to your browser and load automatically on the live site. Click "Preview Site" to see edits in action.</p>
+      </div>
+      <div class="quick-stats">
+        <div class="qs"><div class="qs-n">7</div><div class="qs-l">Sections</div></div>
+        <div class="qs"><div class="qs-n">6</div><div class="qs-l">Services</div></div>
+        <div class="qs"><div class="qs-n">3</div><div class="qs-l">Case Studies</div></div>
+        <div class="qs"><div class="qs-n">4</div><div class="qs-l">Result Stats</div></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Quick Tips</div>
+        <p style="font-size:.9rem;color:rgba(240,237,230,.5);line-height:1.8;">
+          → Use the sidebar to navigate to any section.<br>
+          → Hit <strong style="color:var(--yellow)">Save Changes</strong> after editing — changes persist across browser sessions.<br>
+          → <strong style="color:var(--yellow)">Reset All</strong> clears all edits and restores original copy.<br>
+          → The site reads from the same localStorage, so edits appear immediately on preview.
+        </p>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="panel" id="panel-hero">
+      <div class="edit-card">
+        <div class="card-label">Eyebrow & Headlines</div>
+        <div class="field-full"><label class="f-label">Eyebrow Text</label><input class="f-input" id="e-hero-eyebrow" type="text"/></div>
+        <div class="field-row">
+          <div><label class="f-label">Headline Line 1</label><input class="f-input" id="e-hero-l1" type="text"/></div>
+          <div><label class="f-label">Headline Line 2</label><input class="f-input" id="e-hero-l2" type="text"/></div>
+        </div>
+        <div class="field-full"><label class="f-label">Headline Line 3 (Glitch word)</label><input class="f-input" id="e-hero-l3" type="text"/></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Subtext & Buttons</div>
+        <div class="field-full"><label class="f-label">Subheadline paragraph</label><textarea class="f-input" id="e-hero-sub"></textarea></div>
+        <div class="field-row">
+          <div><label class="f-label">Primary Button Text</label><input class="f-input" id="e-hero-btn1" type="text"/></div>
+          <div><label class="f-label">Secondary Button Text</label><input class="f-input" id="e-hero-btn2" type="text"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="panel" id="panel-about">
+      <div class="edit-card">
+        <div class="card-label">About Section</div>
+        <div class="field-full"><label class="f-label">Heading (HTML ok, use &lt;br&gt; and &lt;span&gt;)</label><textarea class="f-input" id="e-about-h"></textarea></div>
+        <div class="field-row">
+          <div><label class="f-label">Paragraph 1</label><textarea class="f-input" id="e-about-p1"></textarea></div>
+          <div><label class="f-label">Paragraph 2</label><textarea class="f-input" id="e-about-p2"></textarea></div>
+        </div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Stats</div>
+        <div class="field-row">
+          <div><label class="f-label">Stat 1 — Number</label><input class="f-input" id="e-stat1-n" type="text"/></div>
+          <div><label class="f-label">Stat 1 — Label</label><input class="f-input" id="e-stat1-l" type="text"/></div>
+        </div>
+        <div class="field-row">
+          <div><label class="f-label">Stat 2 — Number</label><input class="f-input" id="e-stat2-n" type="text"/></div>
+          <div><label class="f-label">Stat 2 — Label</label><input class="f-input" id="e-stat2-l" type="text"/></div>
+        </div>
+        <div class="field-row">
+          <div><label class="f-label">Stat 3 — Number</label><input class="f-input" id="e-stat3-n" type="text"/></div>
+          <div><label class="f-label">Stat 3 — Label</label><input class="f-input" id="e-stat3-l" type="text"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="panel" id="panel-services">
+      <div class="edit-card">
+        <div class="card-label">Section Intro</div>
+        <div class="field-full"><label class="f-label">Section description</label><textarea class="f-input" id="e-svc-desc"></textarea></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Service 01</div>
+        <div class="field-full"><label class="f-label">Title</label><input class="f-input" id="e-svc1-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Description</label><textarea class="f-input" id="e-svc1-p"></textarea></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Service 02</div>
+        <div class="field-full"><label class="f-label">Title</label><input class="f-input" id="e-svc2-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Description</label><textarea class="f-input" id="e-svc2-p"></textarea></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Service 03</div>
+        <div class="field-full"><label class="f-label">Title</label><input class="f-input" id="e-svc3-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Description</label><textarea class="f-input" id="e-svc3-p"></textarea></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Service 04</div>
+        <div class="field-full"><label class="f-label">Title</label><input class="f-input" id="e-svc4-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Description</label><textarea class="f-input" id="e-svc4-p"></textarea></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Service 05</div>
+        <div class="field-full"><label class="f-label">Title</label><input class="f-input" id="e-svc5-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Description</label><textarea class="f-input" id="e-svc5-p"></textarea></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Service 06</div>
+        <div class="field-full"><label class="f-label">Title</label><input class="f-input" id="e-svc6-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Description</label><textarea class="f-input" id="e-svc6-p"></textarea></div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="panel" id="panel-results">
+      <div class="edit-card">
+        <div class="card-label">Section Heading</div>
+        <div class="field-row">
+          <div><label class="f-label">Heading (HTML ok)</label><textarea class="f-input" id="e-results-h"></textarea></div>
+          <div><label class="f-label">Subtext</label><textarea class="f-input" id="e-results-sub"></textarea></div>
+        </div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Stat Cards</div>
+        <div class="field-row">
+          <div><label class="f-label">Card 1 — Value</label><input class="f-input" id="e-r1-v" type="text"/></div>
+          <div><label class="f-label">Card 1 — Label</label><textarea class="f-input" id="e-r1-l"></textarea></div>
+        </div>
+        <div class="field-row">
+          <div><label class="f-label">Card 1 — Tag</label><input class="f-input" id="e-r1-t" type="text"/></div>
+        </div>
+        <hr style="border-color:var(--border);margin:1rem 0;"/>
+        <div class="field-row">
+          <div><label class="f-label">Card 2 — Value</label><input class="f-input" id="e-r2-v" type="text"/></div>
+          <div><label class="f-label">Card 2 — Label</label><textarea class="f-input" id="e-r2-l"></textarea></div>
+        </div>
+        <div class="field-row">
+          <div><label class="f-label">Card 2 — Tag</label><input class="f-input" id="e-r2-t" type="text"/></div>
+        </div>
+        <hr style="border-color:var(--border);margin:1rem 0;"/>
+        <div class="field-row">
+          <div><label class="f-label">Card 3 — Value</label><input class="f-input" id="e-r3-v" type="text"/></div>
+          <div><label class="f-label">Card 3 — Label</label><textarea class="f-input" id="e-r3-l"></textarea></div>
+        </div>
+        <div class="field-row">
+          <div><label class="f-label">Card 3 — Tag</label><input class="f-input" id="e-r3-t" type="text"/></div>
+        </div>
+        <hr style="border-color:var(--border);margin:1rem 0;"/>
+        <div class="field-row">
+          <div><label class="f-label">Card 4 — Value</label><input class="f-input" id="e-r4-v" type="text"/></div>
+          <div><label class="f-label">Card 4 — Label</label><textarea class="f-input" id="e-r4-l"></textarea></div>
+        </div>
+        <div class="field-row">
+          <div><label class="f-label">Card 4 — Tag</label><input class="f-input" id="e-r4-t" type="text"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASE STUDIES -->
+    <div class="panel" id="panel-casestudies">
+      <div class="edit-card" style="margin-bottom:1.5rem;">
+        <div class="card-label">Section Header</div>
+        <div class="field-full"><label class="f-label">Section subtext</label><input class="f-input" id="e-cs-sub" type="text"/></div>
+      </div>
+
+      <!-- CS1 -->
+      <div class="cs-edit-card">
+        <div class="cs-edit-head" onclick="toggleCSEdit('cse-1')">
+          <h3>Case Study 01</h3><span class="cs-edit-tog" id="cse-tog-1">▾ Expand</span>
+        </div>
+        <div class="cs-edit-body" id="cse-1">
+          <div class="field-row">
+            <div><label class="f-label">Industry Tag</label><input class="f-input" id="e-cs1-ind" type="text"/></div>
+            <div><label class="f-label">Company Name (HTML ok)</label><textarea class="f-input" id="e-cs1-name"></textarea></div>
+          </div>
+          <div class="field-full"><label class="f-label">Tagline</label><textarea class="f-input" id="e-cs1-tag"></textarea></div>
+          <div class="field-row">
+            <div><label class="f-label">Metric 1 Value</label><input class="f-input" id="e-cs1-m1v" type="text"/></div>
+            <div><label class="f-label">Metric 1 Label</label><input class="f-input" id="e-cs1-m1l" type="text"/></div>
+          </div>
+          <div class="field-row">
+            <div><label class="f-label">Metric 2 Value</label><input class="f-input" id="e-cs1-m2v" type="text"/></div>
+            <div><label class="f-label">Metric 2 Label</label><input class="f-input" id="e-cs1-m2l" type="text"/></div>
+          </div>
+          <div class="field-full"><label class="f-label">Challenge (paragraph)</label><textarea class="f-input" id="e-cs1-challenge"></textarea></div>
+          <div class="field-full"><label class="f-label">What We Did (one item per line — will become bullet list)</label><textarea class="f-input" id="e-cs1-did" style="min-height:100px;"></textarea></div>
+          <div class="field-full"><label class="f-label">Outcome (paragraph)</label><textarea class="f-input" id="e-cs1-outcome"></textarea></div>
+          <div class="field-full"><label class="f-label">Website Link (full URL)</label><input class="f-input" id="e-cs1-link" type="text"/></div>
+        </div>
+      </div>
+
+      <!-- CS2 -->
+      <div class="cs-edit-card">
+        <div class="cs-edit-head" onclick="toggleCSEdit('cse-2')">
+          <h3>Case Study 02</h3><span class="cs-edit-tog" id="cse-tog-2">▾ Expand</span>
+        </div>
+        <div class="cs-edit-body" id="cse-2">
+          <div class="field-row">
+            <div><label class="f-label">Industry Tag</label><input class="f-input" id="e-cs2-ind" type="text"/></div>
+            <div><label class="f-label">Company Name (HTML ok)</label><textarea class="f-input" id="e-cs2-name"></textarea></div>
+          </div>
+          <div class="field-full"><label class="f-label">Tagline</label><textarea class="f-input" id="e-cs2-tag"></textarea></div>
+          <div class="field-row">
+            <div><label class="f-label">Metric 1 Value</label><input class="f-input" id="e-cs2-m1v" type="text"/></div>
+            <div><label class="f-label">Metric 1 Label</label><input class="f-input" id="e-cs2-m1l" type="text"/></div>
+          </div>
+          <div class="field-row">
+            <div><label class="f-label">Metric 2 Value</label><input class="f-input" id="e-cs2-m2v" type="text"/></div>
+            <div><label class="f-label">Metric 2 Label</label><input class="f-input" id="e-cs2-m2l" type="text"/></div>
+          </div>
+          <div class="field-full"><label class="f-label">Challenge</label><textarea class="f-input" id="e-cs2-challenge"></textarea></div>
+          <div class="field-full"><label class="f-label">What We Did (one item per line)</label><textarea class="f-input" id="e-cs2-did" style="min-height:100px;"></textarea></div>
+          <div class="field-full"><label class="f-label">Outcome</label><textarea class="f-input" id="e-cs2-outcome"></textarea></div>
+          <div class="field-full"><label class="f-label">Website Link (full URL)</label><input class="f-input" id="e-cs2-link" type="text"/></div>
+        </div>
+      </div>
+
+      <!-- CS3 -->
+      <div class="cs-edit-card">
+        <div class="cs-edit-head" onclick="toggleCSEdit('cse-3')">
+          <h3>Case Study 03</h3><span class="cs-edit-tog" id="cse-tog-3">▾ Expand</span>
+        </div>
+        <div class="cs-edit-body" id="cse-3">
+          <div class="field-row">
+            <div><label class="f-label">Industry Tag</label><input class="f-input" id="e-cs3-ind" type="text"/></div>
+            <div><label class="f-label">Company Name (HTML ok)</label><textarea class="f-input" id="e-cs3-name"></textarea></div>
+          </div>
+          <div class="field-full"><label class="f-label">Tagline</label><textarea class="f-input" id="e-cs3-tag"></textarea></div>
+          <div class="field-row">
+            <div><label class="f-label">Metric 1 Value</label><input class="f-input" id="e-cs3-m1v" type="text"/></div>
+            <div><label class="f-label">Metric 1 Label</label><input class="f-input" id="e-cs3-m1l" type="text"/></div>
+          </div>
+          <div class="field-row">
+            <div><label class="f-label">Metric 2 Value</label><input class="f-input" id="e-cs3-m2v" type="text"/></div>
+            <div><label class="f-label">Metric 2 Label</label><input class="f-input" id="e-cs3-m2l" type="text"/></div>
+          </div>
+          <div class="field-full"><label class="f-label">Challenge</label><textarea class="f-input" id="e-cs3-challenge"></textarea></div>
+          <div class="field-full"><label class="f-label">What We Did (one item per line)</label><textarea class="f-input" id="e-cs3-did" style="min-height:100px;"></textarea></div>
+          <div class="field-full"><label class="f-label">Outcome</label><textarea class="f-input" id="e-cs3-outcome"></textarea></div>
+          <div class="field-full"><label class="f-label">Website Link (full URL)</label><input class="f-input" id="e-cs3-link" type="text"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIT -->
+    <div class="panel" id="panel-fit">
+      <div class="edit-card">
+        <div class="card-label">Section Heading</div>
+        <div class="field-full"><label class="f-label">Heading (HTML ok, use &lt;em&gt; for magenta)</label><textarea class="f-input" id="e-fit-h"></textarea></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">✓ Yes Column</div>
+        <div class="field-full"><label class="f-label">Column Header</label><input class="f-input" id="e-fit-yes-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 1</label><input class="f-input" id="e-fit-y1" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 2</label><input class="f-input" id="e-fit-y2" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 3</label><input class="f-input" id="e-fit-y3" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 4</label><input class="f-input" id="e-fit-y4" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 5</label><input class="f-input" id="e-fit-y5" type="text"/></div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">✕ No Column</div>
+        <div class="field-full"><label class="f-label">Column Header</label><input class="f-input" id="e-fit-no-h" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 1</label><input class="f-input" id="e-fit-n1" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 2</label><input class="f-input" id="e-fit-n2" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 3</label><input class="f-input" id="e-fit-n3" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 4</label><input class="f-input" id="e-fit-n4" type="text"/></div>
+        <div class="field-full"><label class="f-label">Item 5</label><input class="f-input" id="e-fit-n5" type="text"/></div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="panel" id="panel-ctasec">
+      <div class="edit-card">
+        <div class="card-label">CTA Section</div>
+        <div class="field-row">
+          <div><label class="f-label">Headline Line 1</label><input class="f-input" id="e-cta-l1" type="text"/></div>
+          <div><label class="f-label">Headline Line 2</label><input class="f-input" id="e-cta-l2" type="text"/></div>
+        </div>
+        <div class="field-full"><label class="f-label">Headline Line 3</label><input class="f-input" id="e-cta-l3" type="text"/></div>
+        <div class="field-full"><label class="f-label">Subtext paragraph</label><textarea class="f-input" id="e-cta-p"></textarea></div>
+        <div class="field-row">
+          <div><label class="f-label">Button Text</label><input class="f-input" id="e-cta-btn" type="text"/></div>
+          <div><label class="f-label">Fine Print / Note</label><input class="f-input" id="e-cta-note" type="text"/></div>
+        </div>
+      </div>
+      <div class="edit-card">
+        <div class="card-label">Footer</div>
+        <div class="field-full"><label class="f-label">Footer Copyright Text</label><input class="f-input" id="e-footer-copy" type="text"/></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /admin -->
+
+<div class="toast" id="toast">Changes saved ✓</div>
+
+<script>
+// ── CREDENTIALS (change these) ────────────────────────────────
+const CREDS = { user: 'taylor', pass: 'tec2025!' };
+const CONTENT_KEY = 'tec_content';
+const AUTH_KEY = 'tec_auth';
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function doLogin() {
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value;
+  if (u === CREDS.user && p === CREDS.pass) {
+    localStorage.setItem(AUTH_KEY, '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin').classList.add('show');
+    loadEditors();
+  } else {
+    document.getElementById('login-err').classList.add('show');
+  }
+}
+document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('l-user').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('l-pass').focus(); });
+
+function doLogout() {
+  localStorage.removeItem(AUTH_KEY);
+  location.reload();
+}
+
+// Auto-login if already authed
+if (localStorage.getItem(AUTH_KEY) === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin').classList.add('show');
+  setTimeout(loadEditors, 50);
+}
+
+// ── NAV PANEL SWITCHING ───────────────────────────────────────
+function showPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── CS EDITOR ACCORDION ───────────────────────────────────────
+function toggleCSEdit(id) {
+  const body = document.getElementById(id);
+  const num = id.split('-')[1];
+  const tog = document.getElementById('cse-tog-'+num);
+  const open = body.classList.contains('show');
+  body.classList.toggle('show');
+  tog.textContent = open ? '▾ Expand' : '▴ Collapse';
+}
+
+// ── FIELD MAP ─────────────────────────────────────────────────
+// Maps editor input id → site element id
+// Special: cs*-did = textarea where each line becomes a <li>
+//          cs*-link = anchor href + text
+const FIELD_MAP = {
+  // Hero
+  'e-hero-eyebrow': 'hero-eyebrow',
+  'e-hero-l1': 'hero-l1',
+  'e-hero-l2': 'hero-l2',
+  'e-hero-l3': 'hero-l3',
+  'e-hero-sub': 'hero-sub',
+  'e-hero-btn1': 'hero-btn1',
+  'e-hero-btn2': 'hero-btn2',
+  // About
+  'e-about-h': 'about-h',
+  'e-about-p1': 'about-p1',
+  'e-about-p2': 'about-p2',
+  'e-stat1-n': 'stat1-n', 'e-stat1-l': 'stat1-l',
+  'e-stat2-n': 'stat2-n', 'e-stat2-l': 'stat2-l',
+  'e-stat3-n': 'stat3-n', 'e-stat3-l': 'stat3-l',
+  // Services
+  'e-svc-desc': 'svc-desc',
+  'e-svc1-h': 'svc1-h', 'e-svc1-p': 'svc1-p',
+  'e-svc2-h': 'svc2-h', 'e-svc2-p': 'svc2-p',
+  'e-svc3-h': 'svc3-h', 'e-svc3-p': 'svc3-p',
+  'e-svc4-h': 'svc4-h', 'e-svc4-p': 'svc4-p',
+  'e-svc5-h': 'svc5-h', 'e-svc5-p': 'svc5-p',
+  'e-svc6-h': 'svc6-h', 'e-svc6-p': 'svc6-p',
+  // Results
+  'e-results-h': 'results-h', 'e-results-sub': 'results-sub',
+  'e-r1-v': 'r1-v', 'e-r1-l': 'r1-l', 'e-r1-t': 'r1-t',
+  'e-r2-v': 'r2-v', 'e-r2-l': 'r2-l', 'e-r2-t': 'r2-t',
+  'e-r3-v': 'r3-v', 'e-r3-l': 'r3-l', 'e-r3-t': 'r3-t',
+  'e-r4-v': 'r4-v', 'e-r4-l': 'r4-l', 'e-r4-t': 'r4-t',
+  // Case studies
+  'e-cs-sub': 'cs-sub',
+  'e-cs1-ind': 'cs1-ind', 'e-cs1-name': 'cs1-name', 'e-cs1-tag': 'cs1-tag',
+  'e-cs1-m1v': 'cs1-m1v', 'e-cs1-m1l': 'cs1-m1l',
+  'e-cs1-m2v': 'cs1-m2v', 'e-cs1-m2l': 'cs1-m2l',
+  'e-cs1-challenge': 'cs1-challenge', 'e-cs1-outcome': 'cs1-outcome',
+  'e-cs2-ind': 'cs2-ind', 'e-cs2-name': 'cs2-name', 'e-cs2-tag': 'cs2-tag',
+  'e-cs2-m1v': 'cs2-m1v', 'e-cs2-m1l': 'cs2-m1l',
+  'e-cs2-m2v': 'cs2-m2v', 'e-cs2-m2l': 'cs2-m2l',
+  'e-cs2-challenge': 'cs2-challenge', 'e-cs2-outcome': 'cs2-outcome',
+  'e-cs3-ind': 'cs3-ind', 'e-cs3-name': 'cs3-name', 'e-cs3-tag': 'cs3-tag',
+  'e-cs3-m1v': 'cs3-m1v', 'e-cs3-m1l': 'cs3-m1l',
+  'e-cs3-m2v': 'cs3-m2v', 'e-cs3-m2l': 'cs3-m2l',
+  'e-cs3-challenge': 'cs3-challenge', 'e-cs3-outcome': 'cs3-outcome',
+  // Fit
+  'e-fit-h': 'fit-h',
+  'e-fit-yes-h': 'fit-yes-h',
+  'e-fit-y1': 'fit-y1', 'e-fit-y2': 'fit-y2', 'e-fit-y3': 'fit-y3',
+  'e-fit-y4': 'fit-y4', 'e-fit-y5': 'fit-y5',
+  'e-fit-no-h': 'fit-no-h',
+  'e-fit-n1': 'fit-n1', 'e-fit-n2': 'fit-n2', 'e-fit-n3': 'fit-n3',
+  'e-fit-n4': 'fit-n4', 'e-fit-n5': 'fit-n5',
+  // CTA
+  'e-cta-l1': 'cta-l1', 'e-cta-l2': 'cta-l2', 'e-cta-l3': 'cta-l3',
+  'e-cta-p': 'cta-p', 'e-cta-btn': 'cta-btn', 'e-cta-note': 'cta-note',
+  'e-footer-copy': 'footer-copy',
+};
+
+// Special list fields (textarea → <li> list on site)
+const LIST_FIELDS = {
+  'e-cs1-did': 'cs1-did',
+  'e-cs2-did': 'cs2-did',
+  'e-cs3-did': 'cs3-did',
+};
+
+// Special link fields
+const LINK_FIELDS = {
+  'e-cs1-link': 'cs1-link',
+  'e-cs2-link': 'cs2-link',
+  'e-cs3-link': 'cs3-link',
+};
+
+// ── LOAD EDITORS FROM SITE CONTENT ───────────────────────────
+function loadEditors() {
+  const saved = JSON.parse(localStorage.getItem(CONTENT_KEY) || '{}');
+
+  // Standard fields
+  Object.entries(FIELD_MAP).forEach(([eid, sid]) => {
+    const el = document.getElementById(eid);
+    if (!el) return;
+    // Use saved or read placeholder from site defaults
+    el.value = saved[sid] !== undefined ? saved[sid] : (SITE_DEFAULTS[sid] || '');
+  });
+
+  // List fields
+  Object.entries(LIST_FIELDS).forEach(([eid, sid]) => {
+    const el = document.getElementById(eid);
+    if (!el) return;
+    if (saved[sid] !== undefined) {
+      // Convert stored HTML <li> back to plain lines for editing
+      const tmp = document.createElement('ul');
+      tmp.innerHTML = saved[sid];
+      el.value = [...tmp.querySelectorAll('li')].map(li=>li.textContent).join('\n');
+    } else {
+      el.value = SITE_DEFAULTS[sid] || '';
+    }
+  });
+
+  // Link fields
+  Object.entries(LINK_FIELDS).forEach(([eid, sid]) => {
+    const el = document.getElementById(eid);
+    if (!el) return;
+    if (saved[sid] !== undefined) {
+      // stored as "URL||text"
+      const [url] = saved[sid].split('||');
+      el.value = url;
+    } else {
+      el.value = SITE_LINK_DEFAULTS[sid] || '';
+    }
+  });
+}
+
+// ── SAVE ALL ─────────────────────────────────────────────────
+function saveAll() {
+  const store = JSON.parse(localStorage.getItem(CONTENT_KEY) || '{}');
+
+  Object.entries(FIELD_MAP).forEach(([eid, sid]) => {
+    const el = document.getElementById(eid);
+    if (el) store[sid] = el.value;
+  });
+
+  Object.entries(LIST_FIELDS).forEach(([eid, sid]) => {
+    const el = document.getElementById(eid);
+    if (!el) return;
+    const html = el.value.split('\n').filter(l=>l.trim()).map(l=>`<li>${l.trim()}</li>`).join('');
+    store[sid] = html;
+  });
+
+  Object.entries(LINK_FIELDS).forEach(([eid, sid]) => {
+    const el = document.getElementById(eid);
+    if (!el) return;
+    const url = el.value.trim();
+    const label = url.replace(/^https?:\/\//,'');
+    store[sid] = url + '||' + label;
+  });
+
+  localStorage.setItem(CONTENT_KEY, JSON.stringify(store));
+  showToast();
+}
+
+// ── RESET ALL ────────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('Reset all content to defaults? This cannot be undone.')) return;
+  localStorage.removeItem(CONTENT_KEY);
+  loadEditors();
+  showToast('Reset to defaults ✓');
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (msg) t.textContent = msg;
+  else t.textContent = 'Changes saved ✓';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ── SITE DEFAULTS (mirrors the funnel page HTML defaults) ─────
+const SITE_DEFAULTS = {
+  'hero-eyebrow': '— For businesses doing $500K+ who refuse to plateau',
+  'hero-l1': 'Your brand',
+  'hero-l2': 'should be',
+  'hero-l3': 'Unstoppable.',
+  'hero-sub': 'The Endless Creative is an à la carte marketing, advertising & web development agency built for ambitious businesses ready to break through the ceiling.',
+  'hero-btn1': 'Start Scaling Now',
+  'hero-btn2': 'See What We Do',
+  'about-h': 'We\'re not an agency.<br><span>We\'re your growth team.</span>',
+  'about-p1': 'The Endless Creative was built on one conviction: businesses that have already proven themselves deserve partners who move at their speed.',
+  'about-p2': 'Based in Knoxville. Working everywhere. No fluff, no filler — just the exact services you need, executed with precision.',
+  'stat1-n': '100%', 'stat1-l': 'À La Carte',
+  'stat2-n': '$500K+', 'stat2-l': 'Client Min.',
+  'stat3-n': '2X', 'stat3-l': 'Avg. ROI Focus',
+  'svc-desc': 'Pick what you need. Skip what you don\'t. Every service built to generate measurable return.',
+  'svc1-h': 'Web Development & Design', 'svc1-p': 'High-converting websites and web apps built for speed, SEO, and sales. No templates. No compromises.',
+  'svc2-h': 'Paid Advertising', 'svc2-p': 'Google, Meta, TikTok, YouTube — wherever your customers live, we\'ll put you in front of them with precision.',
+  'svc3-h': 'SEO & Content Strategy', 'svc3-p': 'From technical SEO to full content ecosystems, we build organic traffic that compounds over time.',
+  'svc4-h': 'Brand Identity & Strategy', 'svc4-p': 'We build identities that command premium prices, earn trust fast, and make your brand unforgettable.',
+  'svc5-h': 'Social Media Management', 'svc5-p': 'Strategy-first social that grows audiences and converts followers into loyal paying customers.',
+  'svc6-h': 'Email & Automation', 'svc6-p': 'Flows and campaigns that nurture leads and maximize lifetime customer value — on autopilot.',
+  'results-h': 'Built For<br><em>Results.</em><br>Full Stop.',
+  'results-sub': 'Every decision anchored to one thing: your bottom line.',
+  'r1-v': '3.8X', 'r1-l': 'Avg. return on ad spend — e-commerce clients, first 90 days', 'r1-t': 'Paid Media',
+  'r2-v': '+247%', 'r2-l': 'Organic traffic increase from SEO campaigns within 6 months', 'r2-t': 'SEO & Content',
+  'r3-v': '+60%', 'r3-l': 'Average conversion rate lift after website redesign projects', 'r3-t': 'Web Dev',
+  'r4-v': '2.1X', 'r4-l': 'Revenue growth averaged across scaling clients in year one', 'r4-t': 'Full Stack',
+  'cs-sub': 'A few brands we\'ve helped break through. Click to see the full story.',
+  'cs1-ind': 'Automotive', 'cs1-name': 'Knoxville<br>Collision Center', 'cs1-tag': 'Full-service auto body shop dominating local search and modernizing their brand.',
+  'cs1-m1v': '+183%', 'cs1-m1l': 'Organic Leads', 'cs1-m2v': '4.9★', 'cs1-m2l': 'Google Rating',
+  'cs1-challenge': 'An established auto body shop with near-zero online visibility. Their website was outdated, unoptimized, and failing to convert local search traffic into booked estimates.',
+  'cs1-did': 'Full website redesign with service-specific landing pages\nLocal SEO — GMB optimization, citation cleanup, review strategy\nGoogle Ads targeting high-intent collision repair searches\nReputation management driving consistent 5-star reviews',
+  'cs1-outcome': 'Within 5 months, organic leads increased 183%. The shop hit its highest monthly revenue on record in month four of the engagement.',
+  'cs2-ind': 'Photography', 'cs2-name': 'Whitney Brooke<br>Photography', 'cs2-tag': 'Portrait photographer scaling bookings and establishing a premium brand position.',
+  'cs2-m1v': '2.4X', 'cs2-m1l': 'Booking Rate', 'cs2-m2v': '+91%', 'cs2-m2l': 'Site Traffic',
+  'cs2-challenge': 'A talented photographer with an inconsistent brand and a website that undersold her work. Booked on referrals alone and hitting a ceiling.',
+  'cs2-did': 'Brand identity refresh — typography, palette, voice\nPortfolio-first website redesign with streamlined inquiry flow\nInstagram content strategy and caption framework\nPinterest SEO for wedding and portrait search traffic',
+  'cs2-outcome': 'Site traffic nearly doubled in 90 days. Inquiries converted at 2.4X the prior rate. Package pricing raised 30% within six months.',
+  'cs3-ind': 'Music & Entertainment', 'cs3-name': 'Ciderville<br>Music', 'cs3-tag': 'Independent music label growing audience, merch revenue, and artist visibility.',
+  'cs3-m1v': '+310%', 'cs3-m1l': 'Email List', 'cs3-m2v': '3.1X', 'cs3-m2l': 'Merch Revenue',
+  'cs3-challenge': 'A beloved music brand with passionate fans but a fragmented digital presence — no email strategy, outdated merch store, and disconnected social channels.',
+  'cs3-did': 'Website overhaul with integrated merch store and artist hub\nEmail capture + welcome/nurture automation sequence\nFacebook & Instagram ads targeting fans by genre\nContent calendar unifying releases, tours, and merch drops',
+  'cs3-outcome': 'Email list grew 310% in four months. Merch revenue tripled during the next release cycle. The brand now has a repeatable launch playbook for every new signing.',
+  'fit-h': 'You\'re our person.<br>Or you\'re <em>not.</em>',
+  'fit-yes-h': '✦ Built for you if...',
+  'fit-y1': 'You\'re doing $500K+ in revenue and want to push past the next ceiling',
+  'fit-y2': 'You\'re tired of agency overhead that doesn\'t generate ROI',
+  'fit-y3': 'You want a partner who treats your budget like their own',
+  'fit-y4': 'You move fast and expect the same from your team',
+  'fit-y5': 'You want direct access to your strategists, not a middleman',
+  'fit-no-h': '✕ Not the right fit if...',
+  'fit-n1': 'You\'re a startup still figuring out the business model',
+  'fit-n2': 'You want to "test the waters" with a $300/month retainer',
+  'fit-n3': 'You just need someone to "post on Instagram" with no strategy',
+  'fit-n4': 'You\'re not willing to move quickly on approvals',
+  'fit-n5': 'You don\'t value data, reporting, or honest performance talks',
+  'cta-l1': 'Ready to', 'cta-l2': 'Stop Guessing', 'cta-l3': '& Start Scaling?',
+  'cta-p': 'Tell us where you\'re at and where you want to go. We\'ll map exactly what it takes to get there.',
+  'cta-btn': 'Get a Free Strategy Call',
+  'cta-note': 'No pitch decks. No hard sells. Just a real conversation about your growth.',
+  'footer-copy': '© 2025 The Endless Creative — Knoxville, TN',
+};
+
+const SITE_LINK_DEFAULTS = {
+  'cs1-link': 'https://www.chapmancollision.com',
+  'cs2-link': 'https://www.whitneybrookephoto.com',
+  'cs3-link': 'https://www.cidervillemusic.com',
+};
+</script>
+</body>
+</html>
